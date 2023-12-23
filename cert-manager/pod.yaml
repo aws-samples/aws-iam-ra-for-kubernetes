@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iamra-aws-pca
+  namespace: default
+spec:
+  containers:
+    - name: app-container
+      image: amazon/aws-cli
+      command: ['sh', '-c']
+      args: ['aws sts get-caller-identity && echo The app is running! && sleep 3600']
+      imagePullPolicy: Always
+      env:
+        - name: AWS_EC2_METADATA_SERVICE_ENDPOINT
+          value: "http://127.0.0.1:9911/"
+    - name: iamra
+      image: 828745404977.dkr.ecr.eu-north-1.amazonaws.com/iamra:v2
+      command: ["aws_signing_helper"]
+      args:
+        - "serve"
+        - "--certificate"
+        - "/mnt/credentials/tls.crt"
+        - "--private-key"
+        - "/mnt/credentials/tls.key"
+        - "--trust-anchor-arn"
+        - "$(TRUST_ANCHOR_ARN)"
+        - "--profile-arn"
+        - "$(PROFILE_ARN)"
+        - "--role-arn"
+        - "$(ROLE_ARN)"
+      env:
+        - name: TRUST_ANCHOR_ARN
+          valueFrom:
+            configMapKeyRef:
+              key: IAMRA_TRUST_ANCHOR_ARN
+              name: pod-conf
+        - name: PROFILE_ARN
+          valueFrom:
+            configMapKeyRef:
+              key: IAMRA_PROFILE_ARN
+              name: pod-conf
+        - name: ROLE_ARN
+          valueFrom:
+            configMapKeyRef:
+              key: IAMRA_ROLE_ARN
+              name: pod-conf
+      volumeMounts:
+        - mountPath: /mnt/credentials
+          name: credentials
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "250m"
+        limits:
+          memory: "128Mi"
+      imagePullPolicy: Always
+  volumes:
+    - name: credentials
+      secret:
+        secretName: iamra-cert

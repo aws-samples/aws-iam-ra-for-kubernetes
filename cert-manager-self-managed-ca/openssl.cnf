@@ -1,0 +1,19 @@
+[req]
+default_bits   = 2048
+req_extensions = v3_ca
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+C = US
+ST = Washington
+L = Seattle
+O = AWS
+OU = Prototyping
+CN = Prototyping at AWS
+
+[ v3_ca ]
+basicConstraints = critical,CA:TRUE
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+keyUsage                = critical, cRLSign, digitalSignature, keyCertSign

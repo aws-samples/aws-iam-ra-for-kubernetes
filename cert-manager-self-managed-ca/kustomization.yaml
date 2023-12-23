@@ -1,0 +1,28 @@
+resources:
+  - ca-issuer.yaml
+  - certificate.yaml
+  - pod.yaml
+
+replacements:
+  - source:
+      # Replace any matches by the value of environment variable `MY_IMAGE_TAG`.
+      kind: ConfigMap
+      name: pod-conf
+      fieldPath: data.IAMRA_AWS_SIGNER_REPO_URI
+    targets:
+      - select:
+          # In each Deployment resource …
+          kind: Pod
+        fieldPaths:
+          # … match the image of container `nginx` …
+          - spec.containers.[name=iamra].image
+        options:
+          # … but replace only the second part (image tag) when split by ":".
+          delimiter: ":"
+          index: 0
+
+configMapGenerator:
+- name: pod-conf
+  envs: [environment.properties]
+
+

@@ -1,0 +1,17 @@
+kind: Certificate
+apiVersion: cert-manager.io/v1
+metadata:
+  name: iamra
+  namespace: default
+spec:
+  commonName: "Prototyping at AWS"
+  duration: 24h0m0s
+  issuerRef:
+    group: awspca.cert-manager.io
+    kind: AWSPCAIssuer
+    name: short-lived
+  renewBefore: 0h5m0s
+  secretName: iamra-cert
+  privateKey:
+    algorithm: "RSA"
+    size: 2048

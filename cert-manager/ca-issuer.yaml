@@ -1,0 +1,8 @@
+apiVersion: awspca.cert-manager.io/v1beta1
+kind: AWSPCAIssuer
+metadata:
+  name: short-lived
+  namespace: default
+spec:
+  arn: $(IAMRA_PCA_ARN)
+  region: eu-west-1

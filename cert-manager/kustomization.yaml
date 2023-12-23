@@ -1,0 +1,21 @@
+resources:
+  - ca-issuer.yaml
+  - certificate.yaml
+  - pod.yaml
+
+configMapGenerator:
+- name: pod-conf
+  envs: [environment.properties]
+
+
+vars:
+  - name: IAMRA_PCA_ARN
+    objref:
+      kind: ConfigMap
+      name: pod-conf
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.IAMRA_PCA_ARN
+
+configurations:
+  - env-var-transformer.yaml

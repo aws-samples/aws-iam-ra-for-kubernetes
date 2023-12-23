@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Roles Anywhere implementation"
+Parameters:
+  X509CertificateData:
+    Type: String
+    Description: "The public key of the CA"
+Resources:
+  ## AWS IAM Role section
+  SelfManagedCARole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - rolesanywhere.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+              - 'sts:TagSession'
+              - 'sts:SetSourceIdentity'
+            Condition:
+              ArnEquals:
+                "aws:SourceArn":
+                  Fn::GetAtt:
+                    - SelfManagedCATrustAnchor
+                    - TrustAnchorArn
+      MaxSessionDuration: 3600 # maximum duration for the generated credential
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+  SelfManagedCATrustAnchor:
+    Type: AWS::RolesAnywhere::TrustAnchor
+    Properties:
+      Name: 'SelfManagedCATrustAnchor'
+      Enabled: True
+      Source:
+        SourceType: CERTIFICATE_BUNDLE
+        SourceData:
+          X509CertificateData:
+            Ref: X509CertificateData
+  SelfManagedCAProfile:
+    Type: AWS::RolesAnywhere::Profile
+    Properties:
+      DurationSeconds: 900
+      Enabled: True
+      Name: SelfManagedCAProfile
+      RoleArns:
+       - Fn::GetAtt:
+          - SelfManagedCARole
+          - Arn
+  AWSSignerHelperRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      EmptyOnDelete: true
+      RepositoryName: aws-signer-helper
+Outputs:
+  TrustAnchorArn:
+    Value:
+      Fn::GetAtt:
+        - SelfManagedCATrustAnchor
+        - TrustAnchorArn
+  ProfileCAArn:
+    Value:
+      Fn::GetAtt:
+        - SelfManagedCAProfile
+        - ProfileArn
+  RoleArn:
+    Value:
+      Fn::GetAtt:
+        - SelfManagedCARole
+        - Arn
+  AWSSignerHelperRepositoryUri:
+    Value:
+      Fn::GetAtt:
+        - AWSSignerHelperRepository
+        - RepositoryUri
+  AWSEcrEndpointUri:
+    Value:
+      Fn::Select:
+        - 0
+        - Fn::Split:
+            - "/"
+            - Fn::GetAtt:
+                - AWSSignerHelperRepository
+                - RepositoryUri
+

@@ -1,0 +1,17 @@
+kind: Certificate
+apiVersion: cert-manager.io/v1
+metadata:
+  name: iamra-ss
+  namespace: default
+spec:
+  commonName: "Prototyping at AWS"
+  duration: 24h0m0s
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: ca-issuer
+  renewBefore: 0h5m0s
+  secretName: iamra-ss-cert
+  privateKey:
+    algorithm: "RSA"
+    size: 2048

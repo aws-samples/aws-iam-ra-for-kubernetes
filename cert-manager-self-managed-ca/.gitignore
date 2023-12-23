@@ -1,0 +1,6 @@
+rootCACert.pem
+rootCAKey.pem
+environment.properties
+*.drawio
+*.drawio.bkp
+*.DS_Store/

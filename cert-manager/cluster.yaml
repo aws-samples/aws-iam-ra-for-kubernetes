@@ -1,0 +1,52 @@
+# A simple example of ClusterConfig object:
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: iamra
+  region: eu-west-1
+
+
+addons:
+  - name: aws-ebs-csi-driver
+    # all below properties are optional
+    tags:
+      team: eks
+    # you can specify at most one of
+    attachPolicyARNs:
+      - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+    # or
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: aws-privateca-issuer
+        # if no namespace is set, "default" will be used;
+        # the namespace will be created if it doesn't exist already
+        namespace: default
+      attachPolicy:
+        Statement:
+          - Effect: Allow
+            Action:
+              - acm-pca:DescribeCertificateAuthority
+              - acm-pca:GetCertificate
+              - acm-pca:IssueCertificate
+            Resource: '*'
+
+nodeGroups:
+  - name: ng-1
+    instanceType: t3.xlarge
+    desiredCapacity: 3
+    ssh:
+      enableSsm: true
+
+cloudWatch:
+  clusterLogging:
+    # enable specific types of cluster control plane logs
+    enableTypes: ["audit", "authenticator", "controllerManager"]
+    # all supported types: "api", "audit", "authenticator", "controllerManager", "scheduler"
+    # supported special values: "*" and "all"
+
+#  eksctl create iamserviceaccount --cluster=cluster-1 --name=aws-privateca-issuer --role-name "custom-role-name"

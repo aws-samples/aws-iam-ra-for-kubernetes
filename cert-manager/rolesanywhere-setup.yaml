@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Roles Anywhere implementation"
+Resources:
+  ## AWS ACM Private CA section
+  ShortTermRootCA:
+    Type: AWS::ACMPCA::CertificateAuthority
+    Properties:
+      Type: ROOT
+      KeyAlgorithm: RSA_2048
+      SigningAlgorithm: SHA256WITHRSA
+      Subject:
+        Country: US
+        Organization: AWS
+        OrganizationalUnit: prototyping
+        State: string
+        CommonName: prototyping
+        Locality: Luxembourg
+      UsageMode: SHORT_LIVED_CERTIFICATE
+  ShortTermRootCACertificate:
+    Type: AWS::ACMPCA::Certificate
+    Properties:
+      CertificateAuthorityArn:
+        Ref: ShortTermRootCA
+      CertificateSigningRequest:
+        Fn::GetAtt:
+          - "ShortTermRootCA"
+          - CertificateSigningRequest
+      SigningAlgorithm: SHA256WITHRSA
+      TemplateArn: arn:aws:acm-pca:::template/RootCACertificate/V1
+      Validity:
+        Type: DAYS
+        Value: 365
+  ShortRootCAActivation:
+    Type: AWS::ACMPCA::CertificateAuthorityActivation
+    Properties:
+      CertificateAuthorityArn:
+        Ref: "ShortTermRootCA"
+      Certificate:
+        Fn::GetAtt:
+          - "ShortTermRootCACertificate"
+          - Certificate
+      Status: ACTIVE
+  ## AWS IAM Role section
+  ShortTermRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - rolesanywhere.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+              - 'sts:TagSession'
+              - 'sts:SetSourceIdentity'
+            Condition:
+              ArnEquals:
+                "aws:SourceArn":
+                  Fn::GetAtt:
+                    - ShortTermTrustAnchor
+                    - TrustAnchorArn
+      ManagedPolicyArns:
+      - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+  ShortTermTrustAnchor:
+    Type: AWS::RolesAnywhere::TrustAnchor
+    Properties:
+      Name: 'ShortTermTrustAnchor'
+      Enabled: True
+      Source:
+        SourceType: AWS_ACM_PCA
+        SourceData:
+          AcmPcaArn:
+            Ref: ShortTermRootCA
+    DependsOn: ShortRootCAActivation
+  ShortTermProfile:
+    Type: AWS::RolesAnywhere::Profile
+    Properties:
+      DurationSeconds: 900
+      Enabled: True
+      Name: ShortTermProfile
+      RoleArns:
+       - Fn::GetAtt:
+          - ShortTermRole
+          - Arn
+Outputs:
+  ShortTermCAArn:
+    Value:
+      Ref: ShortTermRootCA
+  TrustAnchorArn:
+    Value:
+      Fn::GetAtt:
+        - ShortTermTrustAnchor
+        - TrustAnchorArn
+  ProfileCAArn:
+    Value:
+      Fn::GetAtt:
+        - ShortTermProfile
+        - ProfileArn
+  RoleArn:
+    Value:
+      Fn::GetAtt:
+        - ShortTermRole
+        - Arn
+

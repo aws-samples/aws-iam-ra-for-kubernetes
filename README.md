@@ -1,17 +1,16 @@
-## My Project
+# IAM RA for Kubernetes
 
-TODO: Fill this README out!
+## Description
+The purpose of this repository is to explore alternative approaches for assigning identities to Kubernetes Pods. The de facto approach when running Amazon EKS is to use IAM Roles for Service Accounts (IRSA). IRSA currently uses projected volumes for service account tokens to authenticate to AWS IAM and subsequently obtain a set of temporary credentials for calling AWS APIs. On self managed Kubernetes, i.e. Kubernetes running on EC2, customers can run the [Amazon EKS Pod Identity Webhook](https://github.com/aws/amazon-eks-pod-identity-webhook). The self-hosted setup, however, can be rather involved; for example, your cluster's kube-controller-manager must be properly configured to sign certificate requests. You’ll also need to put your public certificate in place where AWS STS can discover it, like a public S3 bucket.
 
-Be sure to:
+IAM Roles Anywhere provides an alternate mechanism for assigning temporary credentials to different workloads such as Kubernetes Pods. It uses x.509 certificates as the basis for issuing verifiable identities. These identities are used to make API calls that are signed by keys associated with the x.509 certificate. When IAM Roles Anywhere creates a session for a workload the keys are used to obtain a standard SigV4 compatible session credential. 
 
-* Change the title in this README
-* Edit your repository description on GitHub
+IAM Roles Anywhere has a few advantages over IRSA. First, it can make use of session tags (verify) allowing you to assign more granular permissions to AWS resources. Second, IAM Roles Anywhere doesn’t require you to create an OIDC endpoint for each cluster and therefore isn’t subject to OIDC endpoint service limits. Third, your role trust policies should always be below the 4K limit. 
 
-## Security
+The approach we took involves issuing x.509 certificates to Kubernetes Pods using cert-manager and Hashicorp’s Vault respectively. In the cert-manager approach, the certificates [issued by PCA through the cert-manager plugin for PCA] are mounted to a sidecar container running the IAMRA [signing helper](https://github.com/aws/rolesanywhere-credential-helper) in “serve” mode and we set the `AWS_EC2_METADATA_SERVICE_ENDPOINT` to a port on local host. When an application calls an AWS API using an AWS SDK, it retrieves credentials through the exposed endpoint running on localhost. In the Vault approach, the certificates [issued by Vault configured as a subordinate CA] are mounted to a volume shared between an init container and the application container. The init container creates a credential file that the application container can reference. When the application makes a call to an AWS API, is will use the credentials file on the shared volume. For additional details on each approach, see the README in their respective directories. 
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+## Support
+If you need help implementing the approaches described in this repository or are interested in contributing, please contact the authors clemerey@ (cert-manager), hurleyjm@ (vault), premdaz@ (vault), or jicowan@. 
 
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
+## Project status
+This project was an experiment to see how IAMRA could be used to assign roles to Kubernetes Pods. The approaches described herein can be used to as models for assigning roles to Pods running in self managed clusters or clusters running on premises with connectivity to the AWS cloud. 

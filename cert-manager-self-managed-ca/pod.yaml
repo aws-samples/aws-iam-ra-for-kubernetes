@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
     - name: app-container
-      image: amazon/aws-cli
+      image: public.ecr.aws/aws-cli/aws-cli:2.15.6
       command: ['sh', '-c']
       args: ['aws sts get-caller-identity && echo The app is running! && sleep 3600']
       imagePullPolicy: Always

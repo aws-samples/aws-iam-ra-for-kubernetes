@@ -1,10 +1,11 @@
-IAM Roles Anywhere with Cert Manager and a self-managed CA
+# IAM Roles Anywhere with Cert Manager and a self-managed CA
 
 ## Table of contents
 * [Pre-requisite](#pre-requisite)
 * [Description](#description)
 * [Architecture](#architecture)
 * [Walkthrough](#walkthrough)
+* [Cleaning](#cleaning)
 * [Video](#video)
 * [Recommendations](#recommendations)
 
@@ -76,7 +77,7 @@ All commands  should be executed from the folder `cert-manager-self-managed-ca`
       export IAMRA_PROFILE_ARN=$(aws cloudformation describe-stacks --stack-name rolesanywhere-sm-setup --query 'Stacks[0].Outputs[?OutputKey==`ProfileCAArn`] | [0].OutputValue' --output text)
       export IAMRA_ROLE_ARN=$(aws cloudformation describe-stacks --stack-name rolesanywhere-sm-setup --query 'Stacks[0].Outputs[?OutputKey==`RoleArn`] | [0].OutputValue' --output text)
       export IAMRA_AWS_SIGNER_REPO_URI=$(aws cloudformation describe-stacks --stack-name rolesanywhere-sm-setup --query 'Stacks[0].Outputs[?OutputKey==`AWSSignerHelperRepositoryUri`] | [0].OutputValue' --output text)
-      export IAMRA_AWS_ECR_URI=$(aws cloudformation describe-stacks --stack-name rolesanywhere-sm-setup --query 'Stacks[0].Outputs[?OutputKey==`AWSECREndpointUri`] | [0].OutputValue' --output text)
+      export IAMRA_AWS_ECR_URI=$(aws cloudformation describe-stacks --stack-name rolesanywhere-sm-setup --query 'Stacks[0].Outputs[?OutputKey==`AWSEcrEndpointUri`] | [0].OutputValue' --output text)
       ```
    3. Build the image for running the credential endpoint
       ```bash
@@ -99,16 +100,16 @@ All commands  should be executed from the folder `cert-manager-self-managed-ca`
       kubectl logs iamra-self-managed-ca
       ```
 ## Cleaning
-1. Deploy the pod
+1. Delete the pod
     ```bash
     kubectl delete -k .
     ```
-2. Deploy the pod
+2. Delete Cert-manger
     ```bash
     helm uninstall -n cert-manager cert-manager
     kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.crds.yaml
     ```
-3. Delete
+3. Delete AWS resources
     ```bash
     aws cloudformation delete-stack --stack-name rolesanywhere-sm-setup
     ```
@@ -130,10 +131,10 @@ You can watch [this video](iamra-section1.mp4) for a live demonstration of the p
 * Use subordinate CA instead of CA.
 * Deploy the application in a dedicated namespace associated with RBAC with least privilege access
 * Avoid the usage of the `root` user in your container
-* Use a unique CA or subordinate CA for a given role. (to be tested)
+* Use a unique CA or subordinate CA for a given role.
 * Use [certificate metadata  (Subject, CN, Issuer)  in the definition of the  trust relationship](https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html) of the IAM Role
 * Apply least privilege access on the IAM Roles attached to IAM roles anywhere
-* Use short lived certificate.
+* Use short-lived certificate.
 * Generate AWS Credentials for a short period of time
 * Set [Role max session duration](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-maxsessionduration) to 1 hour maximum
 * Set max session duration to a maximum 1 hour in AWS Roles Anywhere profile

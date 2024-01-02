@@ -6,6 +6,7 @@
 * [Architecture](#architecture)
 * [Walkthrough](#walkthrough)
 * [Video](#video)
+* [Discussion](#discussion)
 * [Recommendations](#recommendations)
 
 ## Pre-requisite
@@ -114,11 +115,8 @@ You can watch [this video (i.e. section 1)](../cert-manager-self-managed-ca/iamr
 ## Discussion
 ### Removing IRSA
 In this first iteration the AWS plugin for Cert Manager require IRSA in order to issue new certificate. This can be an issue when this is deployed in Kubernetes cluster that are not managed by EKS.  There are 3 remediation
-* Instead of using AWS PCA and the associated plugin we can use a self signed certificate
+* Instead of using AWS PCA and the associated plugin we can use a self-signed certificate
 * Instead of using AWS PCA and the associated plugin we can use spire/spiffe
-* made a pull PR to AWS PCA  cert manager plugin to accept Roles Anywhere as an authentication mecanism
-### Security
-In this configuration, the certificate are mounted in the pods and eventually they could be leak by every developer who has access to the pod.
 
 ## Recommendations
 * Don't expose the  credentials behind a (Kubernetes) services or ingress

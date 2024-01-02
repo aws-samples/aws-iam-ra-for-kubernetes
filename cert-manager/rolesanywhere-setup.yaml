@@ -61,6 +61,7 @@ Resources:
                   Fn::GetAtt:
                     - ShortTermTrustAnchor
                     - TrustAnchorArn
+      MaxSessionDuration: 3600 # maximum duration for the generated credential
       ManagedPolicyArns:
       - 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
   ShortTermTrustAnchor:
@@ -84,6 +85,11 @@ Resources:
        - Fn::GetAtt:
           - ShortTermRole
           - Arn
+  AWSSignerHelperRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      EmptyOnDelete: true
+      RepositoryName: aws-signer-helper
 Outputs:
   ShortTermCAArn:
     Value:
@@ -103,4 +109,18 @@ Outputs:
       Fn::GetAtt:
         - ShortTermRole
         - Arn
+  AWSSignerHelperRepositoryUri:
+    Value:
+      Fn::GetAtt:
+        - AWSSignerHelperRepository
+        - RepositoryUri
+  AWSEcrEndpointUri:
+    Value:
+      Fn::Select:
+        - 0
+        - Fn::Split:
+            - "/"
+            - Fn::GetAtt:
+                - AWSSignerHelperRepository
+                - RepositoryUri
 

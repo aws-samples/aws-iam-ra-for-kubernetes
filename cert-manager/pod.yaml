@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
     - name: app-container
-      image: amazon/aws-cli
+      image: public.ecr.aws/aws-cli/aws-cli:2.15.6
       command: ['sh', '-c']
       args: ['aws sts get-caller-identity && echo The app is running! && sleep 3600']
       imagePullPolicy: Always
@@ -14,7 +14,7 @@ spec:
         - name: AWS_EC2_METADATA_SERVICE_ENDPOINT
           value: "http://127.0.0.1:9911/"
     - name: iamra
-      image: 828745404977.dkr.ecr.eu-north-1.amazonaws.com/iamra:v2
+      image: AWS_SIGNER_HELPER_ECR_IMAGE_URI:v1
       command: ["aws_signing_helper"]
       args:
         - "serve"

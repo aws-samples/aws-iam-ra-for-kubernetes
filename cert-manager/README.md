@@ -11,7 +11,6 @@
 
 ## Pre-requisite
 Before going to the [Walkthrough](#walkthrough) section you  will need to install the following tool.
-* openssl
 * [kubectl](https://kubernetes.io/docs/reference/kubectl/)
 * [aws CLI](https://aws.amazon.com/cli/)
 * [eksctl](https://eksctl.io/)
